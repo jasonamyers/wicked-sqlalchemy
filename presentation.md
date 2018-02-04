@@ -378,9 +378,9 @@ query = caching_session.query(Accounts.bid, func.count(1)
    ).group_by(Accounts.bid).limit(5000).options(
        FromCache('default'))
 ```
-
+---
 # Well... is it worth it...
-### Executing the queries
+### Executing the query
 
 * 24.9s: Uncached
 
