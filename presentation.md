@@ -430,6 +430,8 @@ query = caching_session.query(Accounts.bid, func.count(1)
 
 ---
 
-# Thank You
+![inline](thanks.gif)
 
+```
 http://github.com/jasonamyers/wicked-sqlalchemy
+```
