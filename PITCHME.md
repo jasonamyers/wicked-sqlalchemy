@@ -12,7 +12,7 @@
 # Lying
 ---
 
-```sql                                             
+```sql
 SELECT  titel, 2011-Jahr AS alt, 'Jahre alt' AS Text
 FROM    buch
 WHERE   jahr > 1997
@@ -172,10 +172,9 @@ results = QueryPool(queries).run()
 ### Executing the 6 queries
 
 * 57s: Serially
-* 30s: Query pool 5 workers
-* 31.4s: Query pool 3 workers
 * 49.7s: Query pool 2 workers
-
+* 31.4s: Query pool 3 workers
+* 30s: Query pool 5 workers
 * 27.5s: Query pool with 6 workers
 
 ---

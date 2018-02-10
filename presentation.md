@@ -2,17 +2,19 @@
 
 ---
 
-![](cache.jpg)
+# Lying
 
 ---
 
+# Caching
+
+---
 ![](lying.jpg)
 
 ---
-# Lying
----
 
-```sql                                             
+
+```                                             
 SELECT  titel, 2011-Jahr AS alt, 'Jahre alt' AS Text
 FROM    buch
 WHERE   jahr > 1997
@@ -35,7 +37,11 @@ WHERE jahr=(SELECT MIN(jahr) FROM buch)
 ```
 ---
 
-![](run_away.gif)
+![fit](run_away.gif)
+
+---
+
+![fit](marvin.JPG)
 
 ---
 
@@ -56,8 +62,11 @@ WHERE jahr=(SELECT MIN(jahr) FROM buch)
 ![Fit](gevent_flow_control.png)
 
 ---
+
+![fit](green.png)
+---
 # Coloring PostgreSQL Green
-```python
+```
 def gevent_wait_callback(conn, timeout=None):
     """A wait callback useful to allow gevent to work with Psycopg."""
     while True:
@@ -74,7 +83,7 @@ def gevent_wait_callback(conn, timeout=None):
 ```
 ---
 # Coloring PostgreSQL Green
-```python
+```
 def make_psycopg_green():
     """Configure Psycopg to be used with gevent in non-blocking way."""
     if not hasattr(extensions, 'set_wait_callback'):
@@ -85,10 +94,13 @@ def make_psycopg_green():
     extensions.set_wait_callback(gevent_wait_callback)
 ```
 ---
+![fit](pool.jpg)
+---
 # Building a Query Pool (__init__)
-```python
+```
 import gevent
 from gevent.queue import JoinableQueue, Queue
+
 class QueryPool(object):
     def __init__(self, queries, pool_size=5):
         self.queries = queries
@@ -99,7 +111,7 @@ class QueryPool(object):
 
 ---
 # Building a Query Pool (work)
-```python
+```
 def __query(self, query):
     conn = engine.connect()
     results = conn.execute(query).fetchall()
@@ -108,7 +120,7 @@ def __query(self, query):
 ---
 
 # Building a Query Pool (Executor)
-```python
+```
 def executor(self, number):
     while not self.tasks.empty():
         query = self.tasks.get()
@@ -122,14 +134,14 @@ def executor(self, number):
 ```
 ---
 # Building a Query Pool (Overseer)
-```python
+```
 def overseer(self):
     for query in self.queries:
         self.tasks.put(query)
 ```
 ---
 # Building a Query Pool (runner)
-```python
+```
 def run(self):
     self.running = []
     gevent.spawn(self.overseer).join()
@@ -147,7 +159,7 @@ def run(self):
 ---
 # Queries
 
-```python
+```
 query1 = select([pgbench_tellers])
 query2 = select([pgbench_accounts.c.bid, func.count(1)]).group_by(pgbench_accounts.c.bid)
 query3 = select([pgbench_branches])
@@ -161,7 +173,7 @@ queries = [query1, query2, query3, query4, query5, query6]
 ---
 # Putting it all together
 
-```python
+```
 make_psycopg_green()
 results = QueryPool(queries).run()
 ```
@@ -172,23 +184,26 @@ results = QueryPool(queries).run()
 ### Executing the 6 queries
 
 * 57s: Serially
-* 30s: Query pool 5 workers
-* 31.4s: Query pool 3 workers
 * 49.7s: Query pool 2 workers
-
+* 31.4s: Query pool 3 workers
+* 30s: Query pool 5 workers
 * 27.5s: Query pool with 6 workers
 
 ---
 
-![Fit](complex_query.png)
+![](cache.gif)
 
 ---
 
-![](dogpile.jpg)
+![fit](complex_query.png)
+
+---
+
+![fit](dogpile.jpg)
 
 ---
 # Dogpile (regions)
-```python
+```
 regions = {}
 
 regions['default'] = make_region(async_creation_runner=async_creation_runner,
@@ -197,7 +212,7 @@ regions['default'] = make_region(async_creation_runner=async_creation_runner,
     arguments={
         'host': redis_host,
         'port': redis_port,
-        'db': settings.CACHES['default']['OPTIONS']['DB'],
+        'db': 0,
         'redis_expiration_time': 60*60*2,   # 2 hours
         'distributed_lock': True,
         'lock_timeout': 120,
@@ -206,8 +221,8 @@ regions['default'] = make_region(async_creation_runner=async_creation_runner,
 )
 ```
 ---
-# Dogpile (Dealing with Locking)
-```python
+# Dogpile (Creating cache objects)
+```
 def async_creation_runner(cache, somekey, creator, mutex):
     def runner():
         try:
@@ -220,11 +235,11 @@ def async_creation_runner(cache, somekey, creator, mutex):
     thread.start()
 ```
 ---
-# Dogpile (Cache Keys)
+# Dogpile (Building Cache Keys)
 
-```python
+```
 def unicode_sha1_mangle_key(key):
-    return sha1_mangle_key(clean_unicode(key))
+    return sha1_mangle_key(key.encode('ascii', 'ignore'))
 
 
 def mangle_key(key):
@@ -238,9 +253,12 @@ def mangle_key(key):
 ```
 ---
 
-# CachingQuery (__init__, __iter__)
+![fit](rich.gif)
 
-```python
+---
+# CachingQuery (\_\_init\_\_, \_\_iter\_\_)
+
+```
 class CachingQuery(Query):
 
     def __init__(self, regions, *args, **kw):
@@ -258,7 +276,7 @@ class CachingQuery(Query):
 ---
 # CachingQuery (regions)
 
-```python
+```
     def _get_cache_plus_key(self):
         dogpile_region = self.cache_regions[self._cache_region.region]
         if self._cache_region.cache_key:
@@ -270,7 +288,7 @@ class CachingQuery(Query):
 ---
 # CachingQuery (Getter)
 
-```python
+```
     def get_value(self, merge=True, createfunc=None,
                   expiration_time=None, ignore_expiration=False):
         dogpile_region, cache_key = self._get_cache_plus_key()
@@ -288,7 +306,7 @@ class CachingQuery(Query):
 ---
 # CachingQuery (Getter - cont)
 
-```python
+```
         else:
             try:
                 cached_value = dogpile_region.get_or_create(
@@ -308,7 +326,7 @@ class CachingQuery(Query):
 ---
 # CachingQuery (Setter)
 
-```python
+```
     def set_value(self, value):
         dogpile_region, cache_key = self._get_cache_plus_key()
         try:
@@ -321,18 +339,22 @@ class CachingQuery(Query):
 ---
 # CachingQuery (Key Generator)
 
-```python
+```
 def _key_from_query(query, qualifier=None):
     stmt = query.with_labels().statement
     compiled = stmt.compile()
     params = compiled.params
 
-    return " ".join([clean_unicode(compiled)] +
-                    [clean_unicode(params[k]) for k in sorted(params)])
+    return " ".join([str(compiled)] +
+                    [str(params[k]) for k in sorted(params)])
 ```
 ---
+
+![fit](breath.gif)
+
+---
 # SQLAlchemy Options (FromQuery)
-```python
+```
 class FromCache(MapperOption):
     """Specifies that a Query should load results from a cache."""
 
@@ -348,7 +370,7 @@ class FromCache(MapperOption):
 ```
 ---
 # Callable
-```python
+```
 def query_callable(regions, query_cls=CachingQuery):
     def query(*arg, **kw):
         return query_cls(regions, *arg, **kw)
@@ -357,7 +379,7 @@ def query_callable(regions, query_cls=CachingQuery):
 ---
 # Putting it together (Session)
 
-```python
+```
 def init_caching_session(engine=None):
     if not engine:
         return
@@ -373,7 +395,7 @@ caching_session=CachingSession()
 ---
 # Putting it together (Query)
 
-```python
+```
 query = caching_session.query(Accounts.bid, func.count(1)
    ).group_by(Accounts.bid).limit(5000).options(
        FromCache('default'))
@@ -383,6 +405,27 @@ query = caching_session.query(Accounts.bid, func.count(1)
 ### Executing the query
 
 * 24.9s: Uncached
-
 * 24.9s: Initial run of caching_query
 * 4.32 ms: Second run of caching_query
+
+---
+
+![fit](but-wait.jpg)
+
+---
+
+# Baked queries
+
+![inline](cookie.gif)
+
+---
+
+# Bulk Operations
+
+![inline](bulk.jpg)
+
+---
+
+# Thank You
+
+http://github.com/jasonamyers/wicked-sqlalchemy
