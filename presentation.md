@@ -63,7 +63,9 @@ WHERE jahr=(SELECT MIN(jahr) FROM buch)
 ---
 
 ![fit](green.png)
+
 ---
+
 # Coloring PostgreSQL Green
 ```
 def gevent_wait_callback(conn, timeout=None):
@@ -81,6 +83,7 @@ def gevent_wait_callback(conn, timeout=None):
                 "Bad result from poll: %r" % state)
 ```
 ---
+
 # Coloring PostgreSQL Green
 ```
 def make_psycopg_green():
@@ -92,10 +95,13 @@ def make_psycopg_green():
 
     extensions.set_wait_callback(gevent_wait_callback)
 ```
+
 ---
+
 ![fit](pool.jpg)
+
 ---
-# Building a Query Pool (__init__)
+# Building a Query Pool (\_\_init\_\_)
 ```
 import gevent
 from gevent.queue import JoinableQueue, Queue
