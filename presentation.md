@@ -190,8 +190,7 @@ results = QueryPool(queries).run()
 * 27.5s: Query pool with 6 workers
 
 ---
-
-![](cache.gif)
+![fit](rich.gif)
 
 ---
 
@@ -253,7 +252,7 @@ def mangle_key(key):
 ```
 ---
 
-![fit](rich.gif)
+![](cache.gif)
 
 ---
 # CachingQuery (\_\_init\_\_, \_\_iter\_\_)
